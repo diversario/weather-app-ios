@@ -60,8 +60,6 @@ class Weather {
         
         Alamofire.request(.GET, URL, parameters: params as? [String : AnyObject], encoding: .URLEncodedInURL) .responseJSON { res in
             if let JSON = res.result.value {
-                print("JSON: \(JSON)")
-                
                 if let main = JSON["main"] as? [String: AnyObject] {
                     if let t = main["temp"] as? Double {
                         self._temp = String(Int(t))
@@ -95,7 +93,7 @@ class Weather {
                 self._hour = self._getHour(NSDate())
                 self._lastUpdated = NSDate()
             } else {
-                print("ugh", res.result, res.data)
+                print("Error!", res.result, res.data)
             }
             
             cb()

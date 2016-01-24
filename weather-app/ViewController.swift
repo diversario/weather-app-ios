@@ -19,6 +19,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     @IBOutlet weak var wind: UILabel!
     @IBOutlet weak var weatherIcon: UIImageView!
     @IBOutlet weak var currentLocation: UILabel!
+    @IBOutlet weak var weekday: UILabel!
     
     var clouds1: FloatingImageViews!
     var clouds2: FloatingImageViews!
@@ -32,6 +33,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
 
     override func viewDidAppear(animated: Bool) {
+        backgroundView.layer.addSublayer(gradientLayer)
+        
         locationAuth()
         locationManager.requestLocation()
         locationManager.startUpdatingLocation()
@@ -39,8 +42,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
 
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        print("333333")
         let loc = locations.last!
+        
         weather._getWeather(forLocation: loc) { () -> () in
             self.updateDisplay()
         }
@@ -51,34 +54,19 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
     
     func updateDisplay () {
-        temp.text = "\(weather.temp) ºF"
-        wind.text = "\(weather.wind) MPH"
-        currentLocation.text = "\(weather.location)"
+        self.temp.text = "\(self.weather.temp) ºF"
+        self.wind.text = "\(self.weather.wind) MPH"
+        self.currentLocation.text = "\(self.weather.location)"
         
-        updateBackground()
+        let dayOfWeek = NSCalendar.currentCalendar().component(.Weekday, fromDate: NSDate())
+        
+        self.weekday.text = WEEKDAYS[dayOfWeek]
+        self.updateBackground()
     }
     
     func updateBackground() {
-        let hour = arc4random_uniform(24) //  weather.hour
-        let brightness: CGFloat!
-
-        switch (hour) {
-        case let x where x < 6:
-            brightness = 0.3
-        case let x where x >= 6 && x < 8:
-            brightness = 0.5
-        case let x where x >= 8 && x < 18:
-            brightness = 1
-        case let x where x >= 18 && x < 20:
-            brightness = 0.7
-        case let x where x >= 20 && x < 22:
-            brightness = 0.5
-        case let x where x >= 22:
-            brightness = 0.3
-        default: brightness = 1
-        }
-        
-        print(hour, brightness)
+        let hour = Int(arc4random_uniform(24)) //  weather.hour -- RANDOM HOUR EVERY UPDATE FOR DEMO PURPOSE
+        let brightness = getBrightness(hour)
         
         gradientLayer.frame = self.view.bounds
         
@@ -87,7 +75,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         
         gradientLayer.colors = [color1, color2]
         gradientLayer.locations = [0.0, 1.0]
-        backgroundView.layer.addSublayer(gradientLayer)
         
         let type = brightness < 0.5 ? "dark" : "light"
         let amount = weather.cloudiness / 5
@@ -130,7 +117,34 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
     }
     
+    func getBrightness (hour: Int) -> CGFloat {
+        let brightness: CGFloat!
+        
+        switch (hour) {
+        case let x where x < 6:
+            brightness = 0.3
+        case let x where x >= 6 && x < 8:
+            brightness = 0.5
+        case let x where x >= 8 && x < 18:
+            brightness = 1
+        case let x where x >= 18 && x < 20:
+            brightness = 0.7
+        case let x where x >= 20 && x < 22:
+            brightness = 0.5
+        case let x where x >= 22:
+            brightness = 0.3
+        default: brightness = 1
+        }
+        
+        return brightness
+    }
+    
     func makeClouds (type: String, amount: Int) {
+        if let c1 = clouds1, c2 = clouds2, c3 = clouds3 {
+            c1.fadeAndStop()
+            c2.fadeAndStop()
+            c3.fadeAndStop()
+        }
         
         clouds1 = FloatingImageViews(
             superview: self.backgroundView,
